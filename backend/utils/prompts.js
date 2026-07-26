@@ -14,14 +14,16 @@ Task:
 - For each question, generate a detailed but beginner-friendly answer.
 - If the answer needs a code example, add a small code block inside.
 - Keep formatting very clean.
-- Return a pure JSON array like:
-[
-  {
-    "question": "Question here?",
-    "answer": "Answer here."
-  },
-  ...
-]
+- Return a valid JSON object with a "questions" key containing the list of questions and answers, like:
+{
+  "questions": [
+    {
+      "question": "Question here?",
+      "answer": "Answer here."
+    },
+    ...
+  ]
+}
 
 Important: Do NOT add any extra text. Only return valid JSON.
 `;

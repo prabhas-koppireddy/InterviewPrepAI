@@ -1,12 +1,12 @@
-const { GoogleGenAI } = require("@google/genai");
+const { OpenAI } = require("openai");
 const {
   conceptExplainPrompt,
   questionAnswerPrompt,
 } = require("../utils/prompts");
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-// @desc    Generate interview questions and answers using Gemini
+// @desc    Generate interview questions and answers using OpenAI
 // @route   POST /api/ai/generate-questions
 // @access  Private
 const generateInterviewQuestions = async (req, res) => {
@@ -24,12 +24,13 @@ const generateInterviewQuestions = async (req, res) => {
       numberOfQuestions,
     );
 
-    const response = await ai.models.generateContent({
-      model: "gemini-2.0-flash-lite",
-      contents: prompt,
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [{ role: "user", content: prompt }],
+      response_format: { type: "json_object" },
     });
 
-    let rawText = response.text;
+    let rawText = response.choices[0].message.content;
 
     // Clean it: Remove ```json and ``` from beginning and end
     const cleanedText = rawText
@@ -38,7 +39,11 @@ const generateInterviewQuestions = async (req, res) => {
       .trim(); // remove extra spaces
 
     // Now safe to parse
-    const data = JSON.parse(cleanedText);
+    let data = JSON.parse(cleanedText);
+
+    if (data && !Array.isArray(data) && data.questions) {
+      data = data.questions;
+    }
 
     res.status(200).json(data);
   } catch (error) {
@@ -49,7 +54,7 @@ const generateInterviewQuestions = async (req, res) => {
   }
 };
 
-// @desc    Generate explains a interview question
+// @desc    Generate explanation for an interview question using OpenAI
 // @route   POST /api/ai/generate-explanation
 // @access  Private
 const generateConceptExplanation = async (req, res) => {
@@ -62,12 +67,13 @@ const generateConceptExplanation = async (req, res) => {
 
     const prompt = conceptExplainPrompt(question);
 
-    const response = await ai.models.generateContent({
-      model: "gemini-2.0-flash-lite",
-      contents: prompt,
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [{ role: "user", content: prompt }],
+      response_format: { type: "json_object" },
     });
 
-    let rawText = response.text;
+    let rawText = response.choices[0].message.content;
     // Clean it: Remove ```json and ``` from beginning and end
     const cleanedText = rawText
       .replace(/^```json\s*/, "") // remove starting ```json
@@ -78,10 +84,9 @@ const generateConceptExplanation = async (req, res) => {
     const data = JSON.parse(cleanedText);
 
     res.status(200).json(data);
-    
   } catch (error) {
     res.status(500).json({
-      message: "Failed to generate questions",
+      message: "Failed to generate explanation",
       error: error.message,
     });
   }

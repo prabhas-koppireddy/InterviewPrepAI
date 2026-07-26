@@ -34,7 +34,8 @@ exports.createSession = async (req, res) => {
 
     res.status(201).json({ success: true, session });
   } catch (error) {
-    res.status(500).json({ success: false, message: "Server Error" });
+    console.error("Error in createSession:", error);
+    res.status(500).json({ success: false, message: "Server Error", error: error.message });
   }
 };
 
@@ -49,7 +50,8 @@ exports.getMySessions = async (req, res) => {
 
     res.status(200).json(sessions);
   } catch (error) {
-    res.status(500).json({ success: false, message: "Server Error" });
+    console.error("Error in getMySessions:", error);
+    res.status(500).json({ success: false, message: "Server Error", error: error.message });
   }
 };
 
@@ -73,7 +75,8 @@ exports.getSessionById = async (req, res) => {
 
     res.status(200).json({ success: true, session });
   } catch (error) {
-    res.status(500).json({ success: false, message: "Server Error" });
+    console.error("Error in getSessionById:", error);
+    res.status(500).json({ success: false, message: "Server Error", error: error.message });
   }
 };
 
@@ -102,6 +105,7 @@ exports.deleteSession = async (req, res) => {
     await session.deleteOne();
     res.status(200).json({ message: "Session deleted successfully" });
   } catch (error) {
-    res.status(500).json({ success: false, message: "Server Error" });
+    console.error("Error in deleteSession:", error);
+    res.status(500).json({ success: false, message: "Server Error", error: error.message });
   }
 };
