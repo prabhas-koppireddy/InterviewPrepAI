@@ -1,4 +1,15 @@
-export const BASE_URL = import.meta.env.VITE_API_BASE_URL || "https://interviewprepai-fthm.onrender.com";
+const getBackendUrl = () => {
+  if (
+    typeof window !== "undefined" &&
+    (window.location.hostname === "localhost" ||
+      window.location.hostname === "127.0.0.1")
+  ) {
+    return import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
+  }
+  return "https://interviewprepai-fthm.onrender.com";
+};
+
+export const BASE_URL = getBackendUrl();
 
 export const API_PATHS = {
   AUTH: {
