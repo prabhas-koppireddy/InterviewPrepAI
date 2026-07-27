@@ -23,6 +23,37 @@ const getOpenAIClient = () => {
   return new OpenAI(config);
 };
 
+// Helper to extract JSON from model responses
+const extractJSON = (text) => {
+  try {
+    return JSON.parse(text);
+  } catch (e) {
+    // If parsing fails, clean markdown and try again
+    let cleaned = text.trim();
+    cleaned = cleaned.replace(/^```json\s*/i, "").replace(/```\s*$/g, "").trim();
+    try {
+      return JSON.parse(cleaned);
+    } catch (err) {
+      // Find JSON block start and end if formatting is still present
+      const firstBrace = text.indexOf("{");
+      const lastBrace = text.lastIndexOf("}");
+      if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+        try {
+          return JSON.parse(text.substring(firstBrace, lastBrace + 1));
+        } catch (subErr) {}
+      }
+      const firstBracket = text.indexOf("[");
+      const lastBracket = text.lastIndexOf("]");
+      if (firstBracket !== -1 && lastBracket !== -1 && lastBracket > firstBracket) {
+        try {
+          return JSON.parse(text.substring(firstBracket, lastBracket + 1));
+        } catch (subErr) {}
+      }
+      throw e; // throw the original error if we couldn't parse
+    }
+  }
+};
+
 // @desc    Generate interview questions and answers using OpenAI or Gemini
 // @route   POST /api/ai/generate-questions
 // @access  Private
@@ -72,7 +103,7 @@ const generateInterviewQuestions = async (req, res) => {
       });
 
       const responseText = response.text;
-      const parsed = JSON.parse(responseText);
+      const parsed = extractJSON(responseText);
       data = parsed.questions || parsed;
     } else {
       const openaiClient = getOpenAIClient();
@@ -89,14 +120,7 @@ const generateInterviewQuestions = async (req, res) => {
       });
 
       let rawText = response.choices[0].message.content;
-
-      // Clean it: Remove ```json and ``` from beginning and end
-      const cleanedText = rawText
-        .replace(/^```json\s*/, "") // remove starting ```json
-        .replace(/```$/, "") // remove ending ```
-        .trim(); // remove extra spaces
-
-      data = JSON.parse(cleanedText);
+      data = extractJSON(rawText);
 
       if (data && !Array.isArray(data) && data.questions) {
         data = data.questions;
@@ -147,7 +171,7 @@ const generateConceptExplanation = async (req, res) => {
         }
       });
 
-      data = JSON.parse(response.text);
+      data = extractJSON(response.text);
     } else {
       const openaiClient = getOpenAIClient();
       if (!openaiClient) {
@@ -163,13 +187,7 @@ const generateConceptExplanation = async (req, res) => {
       });
 
       let rawText = response.choices[0].message.content;
-      // Clean it: Remove ```json and ``` from beginning and end
-      const cleanedText = rawText
-        .replace(/^```json\s*/, "") // remove starting ```json
-        .replace(/```$/, "") // remove ending ```
-        .trim(); // remove extra spaces
-
-      data = JSON.parse(cleanedText);
+      data = extractJSON(rawText);
     }
 
     res.status(200).json(data);

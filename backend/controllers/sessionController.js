@@ -10,6 +10,13 @@ exports.createSession = async (req, res) => {
       req.body;
     const userId = req.user._id; // Assuming you have a middleware setting req.user
 
+    if (!questions || !Array.isArray(questions)) {
+      return res.status(400).json({
+        success: false,
+        message: "Failed to create session: generated questions are missing or invalid.",
+      });
+    }
+
     const session = await Session.create({
       user: userId,
       role,

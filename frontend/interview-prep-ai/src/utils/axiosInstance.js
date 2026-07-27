@@ -33,8 +33,11 @@ axiosInstance.interceptors.response.use(
     // Handle common errors globally
     if (error.response) {
       if (error.response.status === 401) {
-        // Redirect to login page
-        window.location.href = "/";
+        localStorage.removeItem("token");
+        // Redirect to login page only if not already on the landing page
+        if (window.location.pathname !== "/") {
+          window.location.href = "/";
+        }
       } else if (error.response.status === 500) {
         console.error("Server error. Please try again later.");
       }
