@@ -1,24 +1,35 @@
 import React, { useRef, useState } from "react";
 import { LuUser, LuUpload, LuTrash } from "react-icons/lu";
+import { compressImage } from "../../utils/helper";
 
 function ProfilePhotoSelector({ image, setImage, preview, setPreview }) {
   const inputRef = useRef(null);
   const [previewUrl, setPreviewUrl] = useState(null);
 
-  const handleImageChange = (event) => {
+  const handleImageChange = async (event) => {
     const file = event.target.files[0];
 
     if (file) {
-      // Update the image state
-      setImage(file);
+      try {
+        // Compress image to 150x150 on the frontend
+        const compressed = await compressImage(file, 150, 150, 0.75);
+        setImage(compressed);
 
-      // Generate preview URL from the file
-      const preview = URL.createObjectURL(file);
-
-      if (setPreview) {
-        setPreview(preview);
+        const preview = URL.createObjectURL(compressed);
+        if (setPreview) {
+          setPreview(preview);
+        }
+        setPreviewUrl(preview);
+      } catch (error) {
+        console.error("Failed to compress image:", error);
+        // Fallback to original file
+        setImage(file);
+        const preview = URL.createObjectURL(file);
+        if (setPreview) {
+          setPreview(preview);
+        }
+        setPreviewUrl(preview);
       }
-      setPreviewUrl(preview);
     }
   };
 
